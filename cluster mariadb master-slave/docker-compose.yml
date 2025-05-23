@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  db-master:
+    image: mariadb:11.3
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpass
+    volumes:
+      - db-master-data:/var/lib/mysql
+      - ./init-scripts/00-create-replica-user.sql:/docker-entrypoint-initdb.d/00-create-replica-user.sql
+    command:
+      - --server-id=1
+      - --gtid-strict-mode=ON
+      - --log-bin=binlog
+      - --binlog-format=ROW
+      - --binlog-checksum=NONE
+      - --master-info-repository=TABLE
+      - --relay-log-info-repository=TABLE
+      - --log-slave-updates=ON
+
+  db-slave:
+    image: mariadb:11.3
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpass
+    volumes:
+      - db-slave-data:/var/lib/mysql
+      - ./init-scripts/01-start-slave.sql:/docker-entrypoint-initdb.d/01-start-slave.sql
+    command:
+      - --server-id=2
+      - --gtid-strict-mode=ON
+      - --log-bin=binlog
+      - --binlog-format=ROW
+      - --binlog-checksum=NONE
+      - --master-info-repository=TABLE
+      - --relay-log-info-repository=TABLE
+      - --relay-log=relay-bin
+      - --read-only=ON
+
+volumes:
+  db-master-data:
+  db-slave-data:

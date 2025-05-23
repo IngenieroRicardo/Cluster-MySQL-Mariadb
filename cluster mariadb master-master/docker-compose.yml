@@ -1,0 +1,40 @@
+version: '3'
+services:
+  db-01:
+    image: mariadb:11.7
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpass
+    volumes:
+      - db-01-data:/var/lib/mysql
+      - ./init-scripts/00-create-replica-user.sql:/docker-entrypoint-initdb.d/00-create-replica-user.sql
+      - ./init-scripts/01-configure-slave-db-01.sql:/docker-entrypoint-initdb.d/01-configure-slave.sql
+    command:
+      - --server-id=1
+      - --gtid-strict-mode=ON
+      - --log-bin=binlog
+      - --binlog-format=ROW
+      - --binlog-checksum=NONE
+      - --log-slave-updates=ON
+      - --auto_increment_increment=2
+      - --auto_increment_offset=1
+
+  db-02:
+    image: mariadb:11.7
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpass
+    volumes:
+      - db-02-data:/var/lib/mysql
+      - ./init-scripts/01-configure-slave-db-02.sql:/docker-entrypoint-initdb.d/01-configure-slave.sql
+    command:
+      - --server-id=2
+      - --gtid-strict-mode=ON
+      - --log-bin=binlog
+      - --binlog-format=ROW
+      - --binlog-checksum=NONE
+      - --log-slave-updates=ON
+      - --auto_increment_increment=2
+      - --auto_increment_offset=2
+
+volumes:
+  db-01-data:
+  db-02-data:
